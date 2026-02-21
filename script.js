@@ -1,25 +1,52 @@
 // Login Form Handler with Intentional Bugs for Testing
 
 /**
- * BUG #1: Email Validation Issues
- * - Accepts invalid email formats
- * - Very loose validation that allows malformed emails
+ * Email Validation - Proper validation with detailed checks
+ * - Checks for valid email format
+ * - Requires @ symbol with domain
+ * - Returns error message if invalid, null if valid
  */
 function validateEmail(email) {
-    // INTENTIONAL BUG: Extremely weak email validation
-    // This will accept invalid emails like "test", "test@", "@domain.com", etc.
-    return email.includes('@');
+    if (!email || email.trim() === '') {
+        return 'Email is required';
+    }
+    
+    if (email.length < 3) {
+        return 'Email is too short';
+    }
+    
+    if (email.length > 254) {
+        return 'Email is too long';
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return 'Please enter a valid email address';
+    }
+    
+    return null; // Valid
 }
 
 /**
- * BUG #2: Missing Boundary Checks
- * - No minimum or maximum length validation
- * - Accepts passwords of any length (even 1 character)
+ * Password Validation - Comprehensive boundary checks
+ * - Requires minimum 8 characters
+ * - Maximum 128 characters
+ * - Returns error message if invalid, null if valid
  */
 function validatePassword(password) {
-    // INTENTIONAL BUG: No length validation at all
-    // Should check for minimum 8 characters, maximum limits, etc.
-    return true; // Always returns true
+    if (!password || password.trim() === '') {
+        return 'Password is required';
+    }
+    
+    if (password.length < 8) {
+        return 'Password must be at least 8 characters';
+    }
+    
+    if (password.length > 128) {
+        return 'Password is too long (max 128 characters)';
+    }
+    
+    return null; // Valid
 }
 
 /**
@@ -34,9 +61,10 @@ function sanitizeInput(input) {
 }
 
 /**
- * BUG #4: Empty Field Submission
- * - Allows form submission with empty fields
- * - No proper required field validation
+ * Proper Form Validation
+ * - Validates all fields before submission
+ * - Shows clear error messages
+ * - Prevents submission if invalid
  */
 function handleLogin(event) {
     event.preventDefault();
@@ -46,38 +74,46 @@ function handleLogin(event) {
     const emailError = document.getElementById('emailError');
     const passwordError = document.getElementById('passwordError');
     
-    // Clear previous errors
+    // Clear previous errors and styling
     emailError.textContent = '';
     passwordError.textContent = '';
+    emailInput.style.borderColor = '';
+    passwordInput.style.borderColor = '';
     
-    const email = emailInput.value;
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     
     let isValid = true;
     
-    // INTENTIONAL BUG: Very weak validation that allows empty fields
-    // Only shows error if field is completely empty, but also proceeds anyway
-    if (email === '') {
-        emailError.textContent = 'Email is required';
+    // Validate email
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+        emailError.textContent = emailValidationError;
+        emailInput.style.borderColor = '#e74c3c';
         isValid = false;
-    } else if (!validateEmail(email)) {
-        emailError.textContent = 'Invalid email format';
-        isValid = false;
+    } else {
+        emailInput.style.borderColor = '#27ae60';
     }
     
-    if (password === '') {
-        passwordError.textContent = 'Password is required';
+    // Validate password
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+        passwordError.textContent = passwordValidationError;
+        passwordInput.style.borderColor = '#e74c3c';
         isValid = false;
-    } else if (!validatePassword(password)) {
-        passwordError.textContent = 'Invalid password';
-        isValid = false;
+    } else {
+        passwordInput.style.borderColor = '#27ae60';
     }
     
-    // INTENTIONAL BUG: Even if validation fails, we still process the login
-    // This allows empty submissions to go through
+    // If validation fails, stop here and don't process login
     if (!isValid) {
-        console.log('Validation failed but processing anyway...');
+        console.log('Validation failed - blocking login');
+        console.log('Email error:', emailValidationError);
+        console.log('Password error:', passwordValidationError);
+        return; // Stop execution
     }
+    
+    console.log('Validation passed - processing login');
     
     // No actual sanitization performed (BUG #3)
     const sanitizedEmail = sanitizeInput(email);
@@ -121,10 +157,70 @@ function trackLoginAttempt() {
     console.log('Login attempts:', loginAttempts);
 }
 
-// INTENTIONAL BUG: Storing sensitive data in localStorage without encryption
-function rememberUser(email) {
-    const rememberMe = document.getElementById('rememberMe').checked;
-    if (rememberMe) {
+/**
+ * Real-time validation on input
+ */
+function setupRealTimeValidation() {
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    
+    // Email real-time validation
+    emailInput.addEventListener('blur', function() {
+        const email = this.value.trim();
+        const error = validateEmail(email);
+        
+        if (error) {
+            emailError.textContent = error;
+            this.style.borderColor = '#e74c3c';
+        } else if (email) {
+            emailError.textContent = '';
+            this.style.borderColor = '#27ae60';
+        } else {
+            emailError.textContent = '';
+            this.style.borderColor = '';
+        }
+    });
+    
+    // Password real-time validation
+    passwordInput.addEventListener('blur', function() {
+        const password = this.value;
+        const error = validatePassword(password);
+        
+        if (error) {
+            passwordError.textContent = error;
+            this.style.borderColor = '#e74c3c';
+        } else if (password) {
+            passwordError.textContent = '';
+            this.style.borderColor = '#27ae60';
+        } else {
+            passwordError.textContent = '';
+            this.style.borderColor = '';
+        }
+    });
+    
+    // Clear errors on input
+    emailInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            emailError.textContent = '';
+        }
+    });
+    
+    passwordInput.addEventListener('input', function() {
+        if (this.value) {
+            passwordError.textContent = '';
+        }
+    });
+}
+
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page loaded - Enhanced validation version');
+    console.log('Features: Real-time validation, Visual feedback, Proper error messages');
+    
+    // Setup real-time validation
+    setupRealTimeValidation(
         // VULNERABLE: Storing email in plain text
         localStorage.setItem('userEmail', email);
     }
