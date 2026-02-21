@@ -220,14 +220,5 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Features: Real-time validation, Visual feedback, Proper error messages');
     
     // Setup real-time validation
-    setupRealTimeValidation(
-        // VULNERABLE: Storing email in plain text
-        localStorage.setItem('userEmail', email);
-    }
-}
-
-// Initialize event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Login page loaded - Testing version with intentional bugs');
-    console.log('Bugs included: Email validation, Boundary checks, SQL injection, Empty submissions');
+    setupRealTimeValidation();
 });
