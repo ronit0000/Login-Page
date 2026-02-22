@@ -11,12 +11,12 @@ function validateEmail(email) {
         return 'Email is required';
     }
     
-    if (email.length < 3) {
-        return 'Email is too short';
+    if (email.length < 11) {
+        return 'Email must be at least 11 characters';
     }
     
-    if (email.length > 254) {
-        return 'Email is too long';
+    if (email.length > 50) {
+        return 'Email must not exceed 50 characters';
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
